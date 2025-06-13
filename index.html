@@ -244,10 +244,10 @@
       await push(dbRef, data);
       keranjang = {};
       renderKeranjang();
-      showNotif('Transaksi disimpan ke Firebase!');
+      showNotif('Transaksi disimpan');
     } catch (err) {
       console.error(err);
-      alert("Gagal menyimpan ke Firebase!");
+      alert("Gagal menyimpan");
     }
   }
 
