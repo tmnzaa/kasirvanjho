@@ -40,6 +40,7 @@
     }
   </style>
 </head>
+<!-- pindahkan ini ke bawah -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
   import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
@@ -63,7 +64,13 @@
   window.push = push;
   window.onValue = onValue;
   window.remove = remove;
+
+  // panggil load data di sini setelah HTML selesai dimuat
+  window.addEventListener("load", () => {
+    loadProdukDariFirebase(); // Memuat produk dan memanggil renderMenu
+  });
 </script>
+
 <body class="max-w-md mx-auto px-4 pt-4 pb-24">
 
   <h1 class="text-2xl font-bold text-center text-yellow-400 mb-4">Angkringan Vanjho</h1>
@@ -122,117 +129,109 @@
   </div>
 
   <script>
-    let produk = [
-      { nama: "Nasi Kucing", harga: 3000 },
-      { nama: "Sate Usus", harga: 2000 },
-      { nama: "Gorengan", harga: 1500 },
-      { nama: "Wedang Jahe", harga: 2500 },
-      { nama: "Teh Panas", harga: 2000 }
-    ];
-    let keranjang = {};
+     let produk = [];
+  let keranjang = {};
 
-    function formatRupiah(angka) {
-      return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    }
+  function formatRupiah(angka) {
+    return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
 
-    function formatHargaInput(el) {
-      let value = el.value.replace(/[^\d]/g, "");
-      el.value = value ? "Rp " + value.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
-    }
+  function formatHargaInput(el) {
+    let value = el.value.replace(/[^\d]/g, "");
+    el.value = value ? "Rp " + value.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
+  }
 
-    function showNotif(pesan) {
-      const box = document.getElementById('notif');
-      box.textContent = pesan;
-      box.classList.remove('hidden');
-      setTimeout(() => box.classList.add('hidden'), 2500);
-    }
+  function showNotif(pesan) {
+    const box = document.getElementById('notif');
+    box.textContent = pesan;
+    box.classList.remove('hidden');
+    setTimeout(() => box.classList.add('hidden'), 2500);
+  }
 
-    function renderMenu() {
-      const list = document.getElementById('menuList');
-      list.innerHTML = '';
-      produk.forEach((p, i) => {
-        list.innerHTML += `
-          <div onclick="tambahKeKeranjang(${i})" class="bg-gray-800 rounded-lg p-3 text-center shadow hover:bg-gray-700 cursor-pointer transition">
-            <p class="font-bold text-yellow-300">${p.nama}</p>
-            <p class="text-sm text-gray-300">${formatRupiah(p.harga)}</p>
-          </div>`;
-      });
-    }
+  function renderMenu() {
+    const list = document.getElementById('menuList');
+    list.innerHTML = '';
+    produk.forEach((p, i) => {
+      list.innerHTML += `
+        <div onclick="tambahKeKeranjang(${i})" class="bg-gray-800 rounded-lg p-3 text-center shadow hover:bg-gray-700 cursor-pointer transition">
+          <p class="font-bold text-yellow-300">${p.nama}</p>
+          <p class="text-sm text-gray-300">${formatRupiah(p.harga)}</p>
+        </div>`;
+    });
+  }
 
-    function tambahKeKeranjang(index) {
-      const item = produk[index];
-      keranjang[item.nama] = keranjang[item.nama] || { ...item, jumlah: 0 };
-      keranjang[item.nama].jumlah++;
-      renderKeranjang();
-    }
+  function tambahKeKeranjang(index) {
+    const item = produk[index];
+    keranjang[item.nama] = keranjang[item.nama] || { ...item, jumlah: 0 };
+    keranjang[item.nama].jumlah++;
+    renderKeranjang();
+  }
 
-    function ubahJumlah(nama, delta) {
-      if (!keranjang[nama]) return;
-      keranjang[nama].jumlah += delta;
-      if (keranjang[nama].jumlah <= 0) delete keranjang[nama];
-      renderKeranjang();
-    }
+  function ubahJumlah(nama, delta) {
+    if (!keranjang[nama]) return;
+    keranjang[nama].jumlah += delta;
+    if (keranjang[nama].jumlah <= 0) delete keranjang[nama];
+    renderKeranjang();
+  }
 
-    function renderKeranjang() {
-      const list = document.getElementById('keranjangList');
-      list.innerHTML = '';
-      let total = 0;
-      Object.values(keranjang).forEach(item => {
-        total += item.jumlah * item.harga;
-        list.innerHTML += `
-          <div class="flex justify-between items-center bg-gray-800 p-2 rounded">
-            <span>${item.nama}</span>
-            <div class="flex gap-2 items-center">
-              <button onclick="ubahJumlah('${item.nama}', -1)" class="px-2 bg-gray-700 rounded">-</button>
-              <span>${item.jumlah}</span>
-              <button onclick="ubahJumlah('${item.nama}', 1)" class="px-2 bg-gray-700 rounded">+</button>
-            </div>
-          </div>`;
-      });
-      document.getElementById('totalHarga').innerText = formatRupiah(total);
-    }
+  function renderKeranjang() {
+    const list = document.getElementById('keranjangList');
+    list.innerHTML = '';
+    let total = 0;
+    Object.values(keranjang).forEach(item => {
+      total += item.jumlah * item.harga;
+      list.innerHTML += `
+        <div class="flex justify-between items-center bg-gray-800 p-2 rounded">
+          <span>${item.nama}</span>
+          <div class="flex gap-2 items-center">
+            <button onclick="ubahJumlah('${item.nama}', -1)" class="px-2 bg-gray-700 rounded">-</button>
+            <span>${item.jumlah}</span>
+            <button onclick="ubahJumlah('${item.nama}', 1)" class="px-2 bg-gray-700 rounded">+</button>
+          </div>
+        </div>`;
+    });
+    document.getElementById('totalHarga').innerText = formatRupiah(total);
+  }
 
-    function tambahProduk() {
-      const nama = document.getElementById('namaBaru').value.trim();
-      const hargaStr = document.getElementById('hargaBaru').value.replace(/[^\d]/g, "");
-      const harga = parseInt(hargaStr);
-      if (!nama || isNaN(harga)) return alert("Isi nama dan harga dengan benar!");
-      produk.push({ nama, harga });
-      document.getElementById('namaBaru').value = '';
-      document.getElementById('hargaBaru').value = '';
-      renderMenu();
-      renderDaftarProduk();
-      showTab('homeTab');
-      showNotif('Produk ditambahkan!');
-    }
+  async function tambahProduk() {
+    const nama = document.getElementById('namaBaru').value.trim();
+    const hargaStr = document.getElementById('hargaBaru').value.replace(/[^\d]/g, "");
+    const harga = parseInt(hargaStr);
+    if (!nama || isNaN(harga)) return alert("Isi nama dan harga dengan benar!");
 
-    function hapusProduk(index) {
-      const nama = produk[index].nama;
-      showConfirm(`Hapus "${nama}"?`, (ok) => {
-        if (ok) {
-          produk.splice(index, 1);
-          renderMenu();
-          renderDaftarProduk();
-          showNotif('Produk berhasil dihapus!');
-        }
-      });
-    }
+    const produkRef = ref(db, 'produk');
+    await push(produkRef, { nama, harga });
 
-    function renderDaftarProduk() {
-      const list = document.getElementById('daftarProduk');
-      list.innerHTML = '';
-      produk.forEach((p, i) => {
-        list.innerHTML += `
-          <div class="flex justify-between items-center bg-gray-800 p-2 rounded">
-            <span>${p.nama} - ${formatRupiah(p.harga)}</span>
-            <button onclick="hapusProduk(${i})" class="text-red-400 hover:text-red-600 text-xl">
-              <i class="bi bi-trash"></i>
-            </button>
-          </div>`;
-      });
-    }
+    document.getElementById('namaBaru').value = '';
+    document.getElementById('hargaBaru').value = '';
+    showTab('homeTab');
+    showNotif('Produk ditambahkan!');
+  }
 
-    async function simpanTransaksi() {
+  function hapusProduk(key) {
+    showConfirm("Hapus produk ini?", (ok) => {
+      if (!ok) return;
+      const delRef = ref(db, 'produk/' + key);
+      remove(delRef);
+      showNotif('Produk dihapus!');
+    });
+  }
+
+  function renderDaftarProduk() {
+    const list = document.getElementById('daftarProduk');
+    list.innerHTML = '';
+    produk.forEach((p) => {
+      list.innerHTML += `
+        <div class="flex justify-between items-center bg-gray-800 p-2 rounded">
+          <span>${p.nama} - ${formatRupiah(p.harga)}</span>
+          <button onclick="hapusProduk('${p.key}')" class="text-red-400 hover:text-red-600 text-xl">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>`;
+    });
+  }
+
+  async function simpanTransaksi() {
     if (Object.keys(keranjang).length === 0) return alert("Keranjang kosong!");
     const waktu = new Date().toLocaleString();
     const transaksi = Object.values(keranjang);
@@ -241,8 +240,8 @@
     const data = { waktu, transaksi, total };
 
     try {
-      const dbRef = window.ref(window.db, 'rekap');
-      await window.push(dbRef, data);
+      const dbRef = ref(db, 'rekap');
+      await push(dbRef, data);
       keranjang = {};
       renderKeranjang();
       showNotif('Transaksi disimpan ke Firebase!');
@@ -252,14 +251,14 @@
     }
   }
 
-    function renderRekap() {
+  function renderRekap() {
     const list = document.getElementById('rekapList');
     const keyword = (document.getElementById('cariRekap')?.value || "").toLowerCase();
-    const dbRef = window.ref(window.db, 'rekap');
+    const dbRef = ref(db, 'rekap');
 
-    window.onValue(dbRef, (snapshot) => {
+    onValue(dbRef, (snapshot) => {
       const data = snapshot.val() || {};
-      const keys = Object.keys(data).reverse(); // Untuk urutan terbaru
+      const keys = Object.keys(data).reverse();
       list.innerHTML = '';
 
       keys.forEach(key => {
@@ -284,52 +283,49 @@
   function hapusRekapFirebase(key) {
     showConfirm("Yakin hapus transaksi ini?", (ok) => {
       if (!ok) return;
-      const delRef = window.ref(window.db, 'rekap/' + key);
-      window.remove(delRef);
+      const delRef = ref(db, 'rekap/' + key);
+      remove(delRef);
       showNotif('Transaksi dihapus!');
     });
   }
 
-    function hapusRekap(index) {
-      showConfirm("Yakin hapus transaksi ini?", (ok) => {
-        if (!ok) return;
-        let rekap = JSON.parse(localStorage.getItem('rekap')) || [];
-        rekap.splice(index, 1);
-        localStorage.setItem('rekap', JSON.stringify(rekap));
-        renderRekap();
-        showNotif('Transaksi dihapus!');
-      });
-    }
+  function showTab(id, el) {
+    ['homeTab', 'tambahTab', 'rekapTab'].forEach(t => document.getElementById(t).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
+    el?.classList.add('active');
+    if (id === 'tambahTab') renderDaftarProduk();
+    if (id === 'rekapTab') renderRekap();
+  }
 
-    function showTab(id, el) {
-      ['homeTab', 'tambahTab', 'rekapTab'].forEach(t => document.getElementById(t).classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-      document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
-      el.classList.add('active');
-      if (id === 'tambahTab') renderDaftarProduk();
-      if (id === 'rekapTab') renderRekap();
-    }
+  let confirmCallback = null;
+  function showConfirm(message, callback) {
+    document.getElementById('modalText').innerText = message;
+    document.getElementById('modalConfirm').classList.remove('hidden');
+    confirmCallback = callback;
+  }
 
-    // Modal confirm logic
-    let confirmCallback = null;
-    function showConfirm(message, callback) {
-      document.getElementById('modalText').innerText = message;
-      document.getElementById('modalConfirm').classList.remove('hidden');
-      confirmCallback = callback;
-    }
+  document.getElementById('modalYes').onclick = () => {
+    if (confirmCallback) confirmCallback(true);
+    document.getElementById('modalConfirm').classList.add('hidden');
+  };
+  document.getElementById('modalNo').onclick = () => {
+    document.getElementById('modalConfirm').classList.add('hidden');
+  };
 
-    document.getElementById('modalYes').onclick = () => {
-      if (confirmCallback) confirmCallback(true);
-      document.getElementById('modalConfirm').classList.add('hidden');
-    };
+  function loadProdukDariFirebase() {
+    const produkRef = ref(db, 'produk');
+    onValue(produkRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      produk = Object.entries(data).map(([key, val]) => ({ key, ...val }));
+      renderMenu();
+      renderDaftarProduk();
+    });
+  }
 
-    document.getElementById('modalNo').onclick = () => {
-      document.getElementById('modalConfirm').classList.add('hidden');
-    };
-
-    renderMenu();
-    renderKeranjang();
-    renderRekap();
+  renderKeranjang();
+  renderRekap();
+  loadProdukDariFirebase();
   </script>
 </body>
 </html>
