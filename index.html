@@ -252,33 +252,54 @@
   }
 
   function renderRekap() {
-    const list = document.getElementById('rekapList');
-    const keyword = (document.getElementById('cariRekap')?.value || "").toLowerCase();
-    const dbRef = ref(db, 'rekap');
+  const list = document.getElementById('rekapList');
+  const keyword = (document.getElementById('cariRekap')?.value || "").toLowerCase();
+  const dbRef = ref(db, 'rekap');
 
-    onValue(dbRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      const keys = Object.keys(data).reverse();
-      list.innerHTML = '';
+  onValue(dbRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    const keys = Object.keys(data).reverse();
+    list.innerHTML = '';
 
-      keys.forEach(key => {
-        const r = data[key];
-        const waktu = r.waktu.toLowerCase();
-        if (keyword && !waktu.includes(keyword)) return;
+    if (keys.length === 0) {
+      list.innerHTML = `<p class="text-center text-gray-500">Rekap kosong.</p>`;
+      return;
+    }
 
-        const detail = r.transaksi.map(t => `${t.jumlah}x ${t.nama} = ${formatRupiah(t.harga * t.jumlah)}`).join('<br>');
+    let tanggalSebelumnya = "";
+
+    keys.forEach(key => {
+      const r = data[key];
+      const waktu = r.waktu.toLowerCase();
+      if (keyword && !waktu.includes(keyword)) return;
+
+      // Ambil tanggal dalam format dd/mm dari string waktu
+      const tanggal = waktu.split(',')[0] || waktu.split(' ')[0]; // misalnya "13/06/2024"
+      const tanggalFormat = tanggal.slice(0, 5); // "13/06"
+
+      // Tambahkan garis jika beda hari
+      if (tanggalFormat !== tanggalSebelumnya) {
         list.innerHTML += `
-          <div class="bg-gray-800 p-3 rounded shadow">
-            <div class="flex justify-between items-center">
-              <p class="text-sm text-gray-400">${r.waktu}</p>
-              <button onclick="hapusRekapFirebase('${key}')" class="text-red-400 hover:text-red-600"><i class="bi bi-trash"></i></button>
-            </div>
-            <div class="text-sm mt-1">${detail}</div>
-            <p class="mt-1 font-bold text-yellow-400">Total: ${formatRupiah(r.total)}</p>
+          <div class="text-center text-gray-400 border-t border-b border-gray-600 py-2 mt-4 font-semibold">
+            ${tanggalFormat}
           </div>`;
-      });
+        tanggalSebelumnya = tanggalFormat;
+      }
+
+      const detail = r.transaksi.map(t => `${t.jumlah}x ${t.nama} = ${formatRupiah(t.harga * t.jumlah)}`).join('<br>');
+
+      list.innerHTML += `
+        <div class="bg-gray-800 p-3 rounded shadow">
+          <div class="flex justify-between items-center">
+            <p class="text-sm text-gray-400">${r.waktu}</p>
+            <button onclick="hapusRekapFirebase('${key}')" class="text-red-400 hover:text-red-600"><i class="bi bi-trash"></i></button>
+          </div>
+          <div class="text-sm mt-1">${detail}</div>
+          <p class="mt-1 font-bold text-yellow-400">Total: ${formatRupiah(r.total)}</p>
+        </div>`;
     });
-  }
+  });
+}
 
   function hapusRekapFirebase(key) {
     showConfirm("Yakin hapus transaksi ini?", (ok) => {
