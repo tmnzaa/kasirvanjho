@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kasir Angkringan Vanjho</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    html, body {
+      overflow-x: hidden;
+      font-family: 'Poppins', sans-serif;
+      background: #121212;
+      color: white;
+      padding-bottom: 80px;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      border-top: 1px solid #333;
+      z-index: 20;
+    }
+    .bottom-nav button {
+      color: #bbb;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .bottom-nav button.active {
+      color: #facc15;
+    }
+  </style>
+</head>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyANCbDLKti5VRDyA2Um0VdYn73-Qd11Gu0",
+    authDomain: "kasirvanjho.firebaseapp.com",
+    databaseURL: "https://kasirvanjho-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "kasirvanjho",
+    storageBucket: "kasirvanjho.appspot.com",
+    messagingSenderId: "551320215389",
+    appId: "1:551320215389:web:04def82466cd30af6692b4",
+    measurementId: "G-7WWZMQ0Q35"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  window.db = db;
+  window.ref = ref;
+  window.push = push;
+  window.onValue = onValue;
+  window.remove = remove;
+</script>
+<body class="max-w-md mx-auto px-4 pt-4 pb-24">
+
+  <h1 class="text-2xl font-bold text-center text-yellow-400 mb-4">Angkringan Vanjho</h1>
+
+  <!-- HOME -->
+  <div id="homeTab">
+    <h2 class="text-lg text-yellow-300 font-semibold mb-2">Menu</h2>
+    <div id="menuList" class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4 w-full"></div>
+
+    <h3 class="text-yellow-300 text-sm font-semibold mt-2">Keranjang</h3>
+    <div id="keranjangList" class="space-y-2 my-2 max-h-[200px] overflow-y-auto pr-2"></div>
+
+    <div class="text-yellow-400 text-lg font-bold mt-2">Total: <span id="totalHarga">Rp 0</span></div>
+    <button onclick="simpanTransaksi()" class="mt-3 w-full bg-yellow-400 text-black font-bold py-2 rounded">Simpan Transaksi</button>
+  </div>
+
+  <!-- TAMBAH PRODUK -->
+  <div id="tambahTab" class="hidden">
+    <h2 class="text-lg text-yellow-300 font-semibold mb-3">Tambah Produk</h2>
+    <div class="space-y-3">
+      <input id="namaBaru" placeholder="Nama Produk" class="w-full p-3 rounded bg-gray-800 text-white" />
+      <input id="hargaBaru" placeholder="Harga (contoh: 2000)" class="w-full p-3 rounded bg-gray-800 text-white" oninput="formatHargaInput(this)" />
+      <button onclick="tambahProduk()" class="w-full bg-yellow-400 text-black font-bold py-3 rounded">Tambah</button>
+    </div>
+
+    <h3 class="text-yellow-300 font-semibold mt-6 mb-2">Daftar Produk</h3>
+    <div id="daftarProduk" class="space-y-2"></div>
+  </div>
+
+  <!-- REKAP -->
+  <div id="rekapTab" class="hidden">
+    <h2 class="text-lg text-yellow-300 font-semibold mb-2">Rekap Transaksi</h2>
+    <input id="cariRekap" oninput="renderRekap()" placeholder="Cari tanggal contoh: 13/06" class="w-full mb-3 p-2 rounded bg-gray-800 text-white" />
+    <div id="rekapList" class="space-y-3"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button onclick="showTab('homeTab', this)" class="active"><i class="bi bi-house-fill text-xl"></i>Home</button>
+    <button onclick="showTab('tambahTab', this)"><i class="bi bi-plus-circle text-xl"></i>Tambah</button>
+    <button onclick="showTab('rekapTab', this)"><i class="bi bi-clipboard-data text-xl"></i>Rekap</button>
+  </div>
+
+  <!-- NOTIF -->
+  <div id="notif" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-4 py-2 rounded shadow font-semibold text-sm hidden z-50"></div>
+
+  <!-- MODAL KONFIRMASI -->
+  <div id="modalConfirm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white text-black p-6 rounded-xl w-80 shadow-lg text-center">
+      <p id="modalText" class="mb-5 font-semibold">Yakin ingin menghapus?</p>
+      <div class="flex justify-center gap-4">
+        <button id="modalYes" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Ya</button>
+        <button id="modalNo" class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let produk = [
+      { nama: "Nasi Kucing", harga: 3000 },
+      { nama: "Sate Usus", harga: 2000 },
+      { nama: "Gorengan", harga: 1500 },
+      { nama: "Wedang Jahe", harga: 2500 },
+      { nama: "Teh Panas", harga: 2000 }
+    ];
+    let keranjang = {};
+
+    function formatRupiah(angka) {
+      return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function formatHargaInput(el) {
+      let value = el.value.replace(/[^\d]/g, "");
+      el.value = value ? "Rp " + value.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
+    }
+
+    function showNotif(pesan) {
+      const box = document.getElementById('notif');
+      box.textContent = pesan;
+      box.classList.remove('hidden');
+      setTimeout(() => box.classList.add('hidden'), 2500);
+    }
+
+    function renderMenu() {
+      const list = document.getElementById('menuList');
+      list.innerHTML = '';
+      produk.forEach((p, i) => {
+        list.innerHTML += `
+          <div onclick="tambahKeKeranjang(${i})" class="bg-gray-800 rounded-lg p-3 text-center shadow hover:bg-gray-700 cursor-pointer transition">
+            <p class="font-bold text-yellow-300">${p.nama}</p>
+            <p class="text-sm text-gray-300">${formatRupiah(p.harga)}</p>
+          </div>`;
+      });
+    }
+
+    function tambahKeKeranjang(index) {
+      const item = produk[index];
+      keranjang[item.nama] = keranjang[item.nama] || { ...item, jumlah: 0 };
+      keranjang[item.nama].jumlah++;
+      renderKeranjang();
+    }
+
+    function ubahJumlah(nama, delta) {
+      if (!keranjang[nama]) return;
+      keranjang[nama].jumlah += delta;
+      if (keranjang[nama].jumlah <= 0) delete keranjang[nama];
+      renderKeranjang();
+    }
+
+    function renderKeranjang() {
+      const list = document.getElementById('keranjangList');
+      list.innerHTML = '';
+      let total = 0;
+      Object.values(keranjang).forEach(item => {
+        total += item.jumlah * item.harga;
+        list.innerHTML += `
+          <div class="flex justify-between items-center bg-gray-800 p-2 rounded">
+            <span>${item.nama}</span>
+            <div class="flex gap-2 items-center">
+              <button onclick="ubahJumlah('${item.nama}', -1)" class="px-2 bg-gray-700 rounded">-</button>
+              <span>${item.jumlah}</span>
+              <button onclick="ubahJumlah('${item.nama}', 1)" class="px-2 bg-gray-700 rounded">+</button>
+            </div>
+          </div>`;
+      });
+      document.getElementById('totalHarga').innerText = formatRupiah(total);
+    }
+
+    function tambahProduk() {
+      const nama = document.getElementById('namaBaru').value.trim();
+      const hargaStr = document.getElementById('hargaBaru').value.replace(/[^\d]/g, "");
+      const harga = parseInt(hargaStr);
+      if (!nama || isNaN(harga)) return alert("Isi nama dan harga dengan benar!");
+      produk.push({ nama, harga });
+      document.getElementById('namaBaru').value = '';
+      document.getElementById('hargaBaru').value = '';
+      renderMenu();
+      renderDaftarProduk();
+      showTab('homeTab');
+      showNotif('Produk ditambahkan!');
+    }
+
+    function hapusProduk(index) {
+      const nama = produk[index].nama;
+      showConfirm(`Hapus "${nama}"?`, (ok) => {
+        if (ok) {
+          produk.splice(index, 1);
+          renderMenu();
+          renderDaftarProduk();
+          showNotif('Produk berhasil dihapus!');
+        }
+      });
+    }
+
+    function renderDaftarProduk() {
+      const list = document.getElementById('daftarProduk');
+      list.innerHTML = '';
+      produk.forEach((p, i) => {
+        list.innerHTML += `
+          <div class="flex justify-between items-center bg-gray-800 p-2 rounded">
+            <span>${p.nama} - ${formatRupiah(p.harga)}</span>
+            <button onclick="hapusProduk(${i})" class="text-red-400 hover:text-red-600 text-xl">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>`;
+      });
+    }
+
+    async function simpanTransaksi() {
+    if (Object.keys(keranjang).length === 0) return alert("Keranjang kosong!");
+    const waktu = new Date().toLocaleString();
+    const transaksi = Object.values(keranjang);
+    const total = transaksi.reduce((a, b) => a + (b.harga * b.jumlah), 0);
+    
+    const data = { waktu, transaksi, total };
+
+    try {
+      const dbRef = window.ref(window.db, 'rekap');
+      await window.push(dbRef, data);
+      keranjang = {};
+      renderKeranjang();
+      showNotif('Transaksi disimpan ke Firebase!');
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menyimpan ke Firebase!");
+    }
+  }
+
+    function renderRekap() {
+    const list = document.getElementById('rekapList');
+    const keyword = (document.getElementById('cariRekap')?.value || "").toLowerCase();
+    const dbRef = window.ref(window.db, 'rekap');
+
+    window.onValue(dbRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      const keys = Object.keys(data).reverse(); // Untuk urutan terbaru
+      list.innerHTML = '';
+
+      keys.forEach(key => {
+        const r = data[key];
+        const waktu = r.waktu.toLowerCase();
+        if (keyword && !waktu.includes(keyword)) return;
+
+        const detail = r.transaksi.map(t => `${t.jumlah}x ${t.nama} = ${formatRupiah(t.harga * t.jumlah)}`).join('<br>');
+        list.innerHTML += `
+          <div class="bg-gray-800 p-3 rounded shadow">
+            <div class="flex justify-between items-center">
+              <p class="text-sm text-gray-400">${r.waktu}</p>
+              <button onclick="hapusRekapFirebase('${key}')" class="text-red-400 hover:text-red-600"><i class="bi bi-trash"></i></button>
+            </div>
+            <div class="text-sm mt-1">${detail}</div>
+            <p class="mt-1 font-bold text-yellow-400">Total: ${formatRupiah(r.total)}</p>
+          </div>`;
+      });
+    });
+  }
+
+  function hapusRekapFirebase(key) {
+    showConfirm("Yakin hapus transaksi ini?", (ok) => {
+      if (!ok) return;
+      const delRef = window.ref(window.db, 'rekap/' + key);
+      window.remove(delRef);
+      showNotif('Transaksi dihapus!');
+    });
+  }
+
+    function hapusRekap(index) {
+      showConfirm("Yakin hapus transaksi ini?", (ok) => {
+        if (!ok) return;
+        let rekap = JSON.parse(localStorage.getItem('rekap')) || [];
+        rekap.splice(index, 1);
+        localStorage.setItem('rekap', JSON.stringify(rekap));
+        renderRekap();
+        showNotif('Transaksi dihapus!');
+      });
+    }
+
+    function showTab(id, el) {
+      ['homeTab', 'tambahTab', 'rekapTab'].forEach(t => document.getElementById(t).classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
+      el.classList.add('active');
+      if (id === 'tambahTab') renderDaftarProduk();
+      if (id === 'rekapTab') renderRekap();
+    }
+
+    // Modal confirm logic
+    let confirmCallback = null;
+    function showConfirm(message, callback) {
+      document.getElementById('modalText').innerText = message;
+      document.getElementById('modalConfirm').classList.remove('hidden');
+      confirmCallback = callback;
+    }
+
+    document.getElementById('modalYes').onclick = () => {
+      if (confirmCallback) confirmCallback(true);
+      document.getElementById('modalConfirm').classList.add('hidden');
+    };
+
+    document.getElementById('modalNo').onclick = () => {
+      document.getElementById('modalConfirm').classList.add('hidden');
+    };
+
+    renderMenu();
+    renderKeranjang();
+    renderRekap();
+  </script>
+</body>
+</html>
