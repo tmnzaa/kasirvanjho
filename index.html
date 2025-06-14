@@ -101,19 +101,11 @@
   </div>
 
   <!-- REKAP -->
-<div id="rekapTab" class="hidden">
-  <h2 class="text-lg text-yellow-300 font-semibold mb-2">Rekap Transaksi</h2>
-
-  <div class="flex flex-col md:flex-row gap-2 mb-3">
-    <input id="tanggalFilter" type="date" onchange="renderRekap()" class="p-2 bg-gray-800 text-white rounded w-full md:w-auto" />
-    <button onclick="resetFilter()" class="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded">Reset Filter</button>
+  <div id="rekapTab" class="hidden">
+    <h2 class="text-lg text-yellow-300 font-semibold mb-2">Rekap Transaksi</h2>
+    <input id="cariRekap" oninput="renderRekap()" placeholder="Cari tanggal contoh: 13/06" class="w-full mb-3 p-2 rounded bg-gray-800 text-white" />
+    <div id="rekapList" class="space-y-3"></div>
   </div>
-
-  <div id="rekapList" class="space-y-3"></div>
-  <div id="rekapKosong" class="text-gray-400 text-center mt-4 hidden">Rekap kosong.</div>
-  <div id="totalPendapatan" class="text-yellow-400 font-semibold text-right mt-4"></div>
-</div>
-
 
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
@@ -260,46 +252,19 @@
   }
 
   function renderRekap() {
-  const rekapList = document.getElementById("rekapList");
-  const rekapKosong = document.getElementById("rekapKosong");
-  const totalPendapatan = document.getElementById("totalPendapatan");
-  const tanggalFilter = document.getElementById("tanggalFilter").value;
-  rekapList.innerHTML = "";
+  const list = document.getElementById('rekapList');
+  const keyword = (document.getElementById('cariRekap')?.value || "").toLowerCase();
+  const dbRef = ref(db, 'rekap');
 
-  let data = JSON.parse(localStorage.getItem("rekap") || "[]");
-  let total = 0;
-  let ditemukan = false;
+  onValue(dbRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    const keys = Object.keys(data).reverse();
+    list.innerHTML = '';
 
-  data.forEach(item => {
-    if (!tanggalFilter || item.tanggal === formatTanggalFilter(tanggalFilter)) {
-      ditemukan = true;
-      total += item.total;
-      rekapList.innerHTML += `
-        <div class="border-t border-gray-600 pt-2">
-          <div class="text-white font-semibold">${item.tanggal}</div>
-          <ul class="text-gray-300 text-sm list-disc pl-5 mt-1">
-            ${item.items.map(i => `<li>${i.nama} - ${i.qty} x ${formatRupiah(i.harga)}</li>`).join("")}
-          </ul>
-          <div class="text-yellow-400 mt-1 font-bold">Total: ${formatRupiah(item.total)}</div>
-        </div>
-      `;
+    if (keys.length === 0) {
+      list.innerHTML = `<p class="text-center text-gray-500">Rekap kosong.</p>`;
+      return;
     }
-  });
-
-  rekapKosong.classList.toggle("hidden", ditemukan);
-  totalPendapatan.innerText = ditemukan ? `Total Pendapatan: ${formatRupiah(total)}` : "";
-}
-
-function formatTanggalFilter(inputDate) {
-  const d = new Date(inputDate);
-  return d.toLocaleDateString("id-ID");
-}
-
-function resetFilter() {
-  document.getElementById("tanggalFilter").value = "";
-  renderRekap();
-}
-
 
     let tanggalSebelumnya = "";
 
