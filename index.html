@@ -240,24 +240,31 @@
   }
 
   async function simpanTransaksi() {
-    if (Object.keys(keranjang).length === 0) return alert("Keranjang kosong!");
-    const waktu = new Date().toLocaleString();
-    const transaksi = Object.values(keranjang);
-    const total = transaksi.reduce((a, b) => a + (b.harga * b.jumlah), 0);
-    
-    const data = { waktu, transaksi, total };
-
-    try {
-      const dbRef = ref(db, 'rekap');
-      await push(dbRef, data);
-      keranjang = {};
-      renderKeranjang();
-      showNotif('Transaksi disimpan');
-    } catch (err) {
-      console.error(err);
-      alert("Gagal menyimpan");
-    }
+  if (Object.keys(keranjang).length === 0) {
+    showNotif("Keranjang kosong!");
+    return;
   }
+
+  const waktu = new Date().toLocaleString();
+  const transaksi = Object.values(keranjang);
+  const total = transaksi.reduce((a, b) => a + (b.harga * b.jumlah), 0);
+  
+  const data = { waktu, transaksi, total };
+
+  try {
+    const dbRef = ref(db, 'rekap');
+    await push(dbRef, data);
+    keranjang = {};
+    renderKeranjang();
+    showNotif('Transaksi disimpan');
+    document.getElementById('uangPembeli').value = '';
+    document.getElementById('kembalian').innerText = '';
+  } catch (err) {
+    console.error(err);
+    showNotif("Gagal menyimpan transaksi");
+  }
+}
+
 
   function renderRekap() {
   const list = document.getElementById('rekapList');
