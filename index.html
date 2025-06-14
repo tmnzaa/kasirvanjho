@@ -323,9 +323,6 @@
     el?.classList.add('active');
     if (id === 'tambahTab') renderDaftarProduk();
     if (id === 'rekapTab') renderRekap();
-   const uangPembeliSection = document.getElementById('uangPembeliContainer');
-  if (uangPembeliSection) {
-    uangPembeliSection.classList.toggle('hidden', tabId !== 'homeTab');
   }
 
   let confirmCallback = null;
