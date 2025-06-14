@@ -149,7 +149,8 @@
 
   <!-- PENGELUARAN -->
 <div id="pengeluaranTab" class="hidden">
-  <h2 class="text-lg text-yellow-300 font-semibold mb-2">Catat Pengeluaran</h2>
+ <h2 class="text-lg text-yellow-300 font-semibold mb-1">Catat Pengeluaran</h2>
+<p class="text-sm text-gray-400 mb-2">Tanggal hari ini: <span id="tanggalHariIni"></span></p>
   <div class="mb-4 space-y-2">
     <input id="namaPengeluaran" placeholder="Nama Pengeluaran" class="w-full p-2 rounded bg-gray-800 text-white" />
     <input id="hargaPengeluaran" placeholder="Harga (contoh: 2000)" class="w-full p-2 rounded bg-gray-800 text-white" oninput="formatHargaInput(this)" />
@@ -229,6 +230,15 @@
 
 
   <script>
+
+function tampilkanTanggalHariIni() {
+  const span = document.getElementById("tanggalHariIni");
+  if (!span) return;
+  const now = new Date();
+  const options = { day: "2-digit", month: "long", year: "numeric" };
+  span.textContent = now.toLocaleDateString("id-ID", options);
+}
+
 
     function formatHargaInput(el) {
   let value = el.value.replace(/[^\d]/g, "");
@@ -610,7 +620,11 @@ function formatInputRupiah(input) {
 
   if (id === 'tambahTab') renderDaftarProduk();
   if (id === 'rekapTab') renderRekap();
-  if (id === 'pengeluaranTab') loadPengeluaran();
+  if (id === 'pengeluaranTab') {
+  loadPengeluaran();
+  tampilkanTanggalHariIni();
+}
+
 }
 
 
