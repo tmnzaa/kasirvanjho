@@ -40,25 +40,24 @@
       color: #facc15;
     }
     .floating-icon {
-  position: fixed;
-  z-index: 9999;
-  background-color: red;
-  border: 2px solid #e2e8f0;
-  border-radius: 9999px;
-  width: 52px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: all 0.2s ease-in-out;
-}
+    position: fixed;
+    z-index: 9999;
+    background-color: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 9999px;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.2s ease-in-out;
+  }
 
-/* Tambahan opsional hover */
-.floating-icon:hover {
-  transform: scale(1.08);
-}
+  .floating-icon:hover {
+    transform: scale(1.08);
+  }
   </style>
 </head>
 <!-- pindahkan ini ke bawah -->
@@ -91,6 +90,29 @@
     loadProdukDariFirebase(); // Memuat produk dan memanggil renderMenu
   });
 </script>
+
+  <!-- Floating Icon -->
+<div id="toggleButton" class="floating-icon" style="bottom: 80px; left: 50%; transform: translateX(-50%);" data-bs-toggle="modal" data-bs-target="#supportModal" title="Support Me">
+  <i id="iconSupport" class="bi bi-code-slash fs-5 text-dark"></i>
+</div>
+
+<!-- Modal QR -->
+<div class="modal fade" id="supportModal" tabindex="-1" aria-labelledby="supportModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow p-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-semibold" id="supportModalLabel">Support My Work</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="text-muted mb-3">Scan QRIS to support this project.</p>
+        <img src="IMG_20250614_144836.png" alt="QRIS" class="img-fluid rounded shadow-sm mb-2" style="max-width: 220px;">
+        <p class="text-xs text-muted mt-2">© Tamianza.dev</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <body class="max-w-md mx-auto px-4 pt-4 pb-24">
 
