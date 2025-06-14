@@ -70,7 +70,7 @@
 <!-- pindahkan ini ke bawah -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-  import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+  import { getDatabase, ref, push, onValue, remove, get} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyANCbDLKti5VRDyA2Um0VdYn73-Qd11Gu0",
@@ -232,12 +232,17 @@
   <script>
 
 function tampilkanTanggalHariIni() {
-  const span = document.getElementById("tanggalHariIni");
-  if (!span) return;
+  const inputTanggal = document.getElementById("tanggalFilter");
   const now = new Date();
-  const options = { day: "2-digit", month: "long", year: "numeric" };
-  span.textContent = now.toLocaleDateString("id-ID", options);
+
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+
+  const tanggalLokal = `${yyyy}-${mm}-${dd}`;
+  inputTanggal.value = tanggalLokal;
 }
+
 
 
     function formatHargaInput(el) {
@@ -249,8 +254,12 @@ async function simpanPengeluaran() {
   const nama = document.getElementById("namaPengeluaran").value.trim();
   const hargaStr = document.getElementById("hargaPengeluaran").value.replace(/[^\d]/g, "");
   const harga = parseInt(hargaStr);
-  const tanggal = new Date().toISOString().split("T")[0];
-  const waktuLengkap = new Date().toLocaleString();
+
+  const now = new Date();
+  const tanggal = now.getFullYear() + '-' + 
+                  String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                  String(now.getDate()).padStart(2, '0');
+  const waktuLengkap = now.toLocaleString("id-ID");
 
   if (!nama || isNaN(harga)) return showNotif("Isi nama dan harga dengan benar!");
 
@@ -260,37 +269,44 @@ async function simpanPengeluaran() {
   document.getElementById("namaPengeluaran").value = '';
   document.getElementById("hargaPengeluaran").value = '';
   showNotif("Pengeluaran disimpan!");
-  loadPengeluaran(); // tampilkan langsung
+  loadPengeluaran();
 }
+
 
 function loadPengeluaran() {
   const list = document.getElementById("listPengeluaran");
-  const tanggalFilter = document.getElementById("tanggalFilter").value || new Date().toISOString().split("T")[0];
+  const tanggalFilter = document.getElementById("tanggalFilter").value ||
+  (new Date().getFullYear() + '-' +
+   String(new Date().getMonth() + 1).padStart(2, '0') + '-' +
+   String(new Date().getDate()).padStart(2, '0'));
   const pengeluaranRef = ref(db, 'pengeluaran');
 
   onValue(pengeluaranRef, (snapshot) => {
     const data = snapshot.val() || {};
-    const arr = Object.values(data).filter(item => item.tanggal === tanggalFilter);
     list.innerHTML = '';
 
-    if (arr.length === 0) {
+    // Ambil hanya item yang sesuai tanggal, sekaligus simpan key-nya
+    const filtered = Object.entries(data).filter(([_, item]) => item.tanggal === tanggalFilter);
+
+    if (filtered.length === 0) {
       list.innerHTML = `<p class="text-sm text-gray-400 text-center">Belum ada pengeluaran hari ini.</p>`;
       return;
     }
 
     let total = 0;
-    arr.forEach((item, index) => {
-  total += item.harga;
-  list.innerHTML += `
-    <div class="bg-gray-800 p-2 rounded flex justify-between items-center">
-      <div>
-        <p>${item.nama}</p>
-        <p class="text-sm text-gray-400">${formatRupiah(item.harga)}</p>
-      </div>
-      <button onclick="hapusPengeluaran('${Object.keys(data)[index]}')" class="text-red-400 hover:text-red-600"><i class="bi bi-trash"></i></button>
-    </div>`;
-});
-
+    filtered.forEach(([key, item]) => {
+      total += item.harga;
+      list.innerHTML += `
+        <div class="bg-gray-800 p-2 rounded flex justify-between items-center">
+          <div>
+            <p>${item.nama}</p>
+            <p class="text-sm text-gray-400">${formatRupiah(item.harga)}</p>
+          </div>
+          <button onclick="hapusPengeluaran('${key}')" class="text-red-400 hover:text-red-600">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>`;
+    });
 
     list.innerHTML += `
       <div class="bg-gray-700 mt-3 p-2 rounded text-right font-bold text-yellow-300">
@@ -298,6 +314,7 @@ function loadPengeluaran() {
       </div>`;
   });
 }
+
 
 function hapusPengeluaran(key) {
   showConfirm("Yakin hapus pengeluaran ini?", (ok) => {
@@ -613,19 +630,26 @@ function formatInputRupiah(input) {
   }
 
   function showTab(id, el) {
-  ['homeTab', 'tambahTab', 'rekapTab', 'pengeluaranTab'].forEach(t => document.getElementById(t)?.classList.add('hidden'));
-  document.getElementById(id)?.classList.remove('hidden');
+  ['homeTab', 'tambahTab', 'rekapTab', 'pengeluaranTab'].forEach(t => {
+    const tab = document.getElementById(t);
+    if (tab) tab.classList.add('hidden');
+  });
+
+  const selectedTab = document.getElementById(id);
+  if (selectedTab) selectedTab.classList.remove('hidden');
+
   document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
-  el?.classList.add('active');
+  if (el) el.classList.add('active');
 
   if (id === 'tambahTab') renderDaftarProduk();
   if (id === 'rekapTab') renderRekap();
   if (id === 'pengeluaranTab') {
-  loadPengeluaran();
-  tampilkanTanggalHariIni();
+    tampilkanTanggalHariIni();   // <-- set otomatis ke hari ini
+    loadPengeluaran();           // <-- tampilkan data sesuai tanggal
+  }
 }
 
-}
+
 
 
   let confirmCallback = null;
