@@ -80,15 +80,6 @@
   <h2 class="text-lg text-yellow-300 font-semibold mb-2">Menu</h2>
   <div id="menuList" class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4 w-full"></div>
 
-<!-- INPUT SUARA -->
-<div class="my-4">
-  <button onclick="mulaiDengar()" class="w-full bg-yellow-500 text-black font-bold py-2 rounded flex items-center justify-center gap-2">
-    🎤 Input Suara
-  </button>
-  <div id="notifSuara" class="text-sm text-yellow-300 mt-2"></div>
-</div>
-
-
   <h3 class="text-yellow-300 text-sm font-semibold mt-2">Keranjang</h3>
   <div id="keranjangList" class="space-y-2 my-2 max-h-[200px] overflow-y-auto pr-2"></div>
 
@@ -395,47 +386,6 @@ function hitungKembalian() {
   kembalianDiv.innerText = `Kembalian: Rp ${kembali.toLocaleString("id-ID")}`;
 }
 
-
-  // Fungsi untuk mulai mendengarkan suara
-  function mulaiDengar() {
-    if (!('webkitSpeechRecognition' in window)) {
-      alert('Browser kamu tidak mendukung input suara. Coba pakai Google Chrome.');
-      return;
-    }
-
-    const recognition = new webkitSpeechRecognition();
-    recognition.lang = 'id-ID';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    document.getElementById("notifSuara").textContent = "🎙️ Mendengarkan...";
-
-    recognition.start();
-
-    recognition.onresult = function(event) {
-      const hasil = event.results[0][0].transcript.toLowerCase();
-      document.getElementById("notifSuara").textContent = "✅ Kamu bilang: " + hasil;
-
-      // Cari produk yang namanya mengandung kata yang diucapkan
-      const semuaProduk = document.querySelectorAll("#menuList > div");
-      let ditemukan = false;
-      semuaProduk.forEach(card => {
-        const namaProduk = card.querySelector("h3").textContent.toLowerCase();
-        if (hasil.includes(namaProduk)) {
-          card.click(); // klik otomatis
-          ditemukan = true;
-        }
-      });
-
-      if (!ditemukan) {
-        document.getElementById("notifSuara").textContent += "\n❌ Produk tidak ditemukan.";
-      }
-    };
-
-    recognition.onerror = function(event) {
-      document.getElementById("notifSuara").textContent = "❌ Gagal mendengar: " + event.error;
-    };
-  }
 
 
   </script>
