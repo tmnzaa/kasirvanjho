@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Mode Maintenance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+  <div id="loginBox" class="bg-[#2a2a2a] max-w-sm w-full rounded-lg shadow p-6 text-center border border-gray-700">
+    <h1 class="text-xl font-semibold text-yellow-400 mb-4">Login Admin</h1>
+    <input type="password" id="passwordInput" placeholder="Masukkan Password"
+      class="w-full mb-4 p-2 rounded bg-gray-800 text-white text-center border border-gray-600" />
+    <button onclick="login()"
+      class="w-full py-2 rounded bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition">
+      Masuk
+    </button>
+    <p id="loginError" class="text-red-400 mt-3 hidden text-sm">Password salah!</p>
+  </div>
+
+  <div id="adminPanel" class="hidden bg-[#2a2a2a] max-w-sm w-full rounded-lg shadow p-6 text-center border border-gray-700">
+    <h1 class="text-2xl font-semibold text-yellow-400 mb-2">Admin Panel</h1>
+    <p class="text-sm text-gray-300 mb-6">Atur status maintenance untuk website kamu.</p>
+
+    <div id="statusText" class="text-lg font-bold mb-6 text-white">Loading...</div>
+
+    <button onclick="toggleMaintenance()" id="btnToggle"
+      class="w-full py-2 rounded bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition">
+      Toggle Maintenance
+    </button>
+
+    <p class="text-xs text-gray-500 mt-6">© Tamianza.dev</p>
+  </div>
+
+  <script>
+    const passwordBenar = "admin123"; // Ganti password sesuai keinginan
+
+    function login() {
+      const input = document.getElementById("passwordInput").value;
+      const errorText = document.getElementById("loginError");
+
+      if (input === passwordBenar) {
+        document.getElementById("loginBox").classList.add("hidden");
+        document.getElementById("adminPanel").classList.remove("hidden");
+        updateStatus();
+      } else {
+        errorText.classList.remove("hidden");
+      }
+    }
+
+    function updateStatus() {
+      const isOn = localStorage.getItem("maintenance") === "true";
+      document.getElementById("statusText").innerText = isOn
+        ? "Status: Maintenance AKTIF"
+        : "Status: Maintenance NONAKTIF";
+
+      document.getElementById("btnToggle").innerText = isOn
+        ? "Matikan Maintenance"
+        : "Aktifkan Maintenance";
+    }
+
+    function toggleMaintenance() {
+      const isOn = localStorage.getItem("maintenance") === "true";
+      localStorage.setItem("maintenance", isOn ? "false" : "true");
+      updateStatus();
+    }
+  </script>
+</body>
+</html>
