@@ -69,18 +69,23 @@
 </head>
 
 <script>
-  const isMaintenance = localStorage.getItem("maintenance") === "true";
-  if (isMaintenance) {
-    document.write(`
-      <div class="fixed inset-0 bg-black flex flex-col items-center justify-center text-center p-6 text-white z-[9999]">
+  const maintenanceMode = true; // GANTI ke true kalau ingin aktifkan maintenance
+
+  if (maintenanceMode) {
+    document.addEventListener("DOMContentLoaded", () => {
+      document.body.innerHTML = `
+        <div class="fixed inset-0 bg-black text-white flex items-center justify-center text-center px-4">
+                <div class="fixed inset-0 bg-black flex flex-col items-center justify-center text-center p-6 text-white z-[9999]">
         <div class="text-5xl mb-4 animate-bounce">🚧</div>
         <h1 class="text-2xl font-bold text-yellow-300 mb-2">Upss.. Ada Maintenance</h1>
-        <p class="text-gray-300">Mohon Maaf! Aplikasi sedang diperbaiki<br>Silakan kembali lagi nanti ya.</p>
+        <p class="text-gray-300">Mohon Maaf! Aplikasi sedang diperbaik<br>Silakan kembali lagi nanti ya.</p>
       </div>
-    `);
-    throw new Error("Maintenance aktif");
+        </div>
+      `;
+    });
   }
 </script>
+
 
   
 <!-- pindahkan ini ke bawah -->
