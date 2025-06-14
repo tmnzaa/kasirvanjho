@@ -58,6 +58,8 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+const rekapList = document.getElementById("rekapList");
+const cariRekap = document.getElementById("cariRekap");
 
   window.db = db;
   window.ref = ref;
@@ -252,19 +254,69 @@
   }
 
   function renderRekap() {
-  const list = document.getElementById('rekapList');
-  const keyword = (document.getElementById('cariRekap')?.value || "").toLowerCase();
-  const dbRef = ref(db, 'rekap');
+  onValue(ref(db, "rekap"), (snapshot) => {
+    const data = snapshot.val();
+    rekapList.innerHTML = "";
 
-  onValue(dbRef, (snapshot) => {
-    const data = snapshot.val() || {};
-    const keys = Object.keys(data).reverse();
-    list.innerHTML = '';
-
-    if (keys.length === 0) {
-      list.innerHTML = `<p class="text-center text-gray-500">Rekap kosong.</p>`;
+    if (!data) {
+      rekapList.innerHTML = `<div class="text-gray-400 italic text-sm text-center">Rekap kosong</div>`;
       return;
     }
+
+    // Filter berdasarkan input
+    const filter = cariRekap.value.toLowerCase();
+
+    const tanggalGroup = {};
+
+    Object.entries(data).forEach(([key, item]) => {
+      const tgl = item.tanggal || "Tidak diketahui";
+      if (!tanggalGroup[tgl]) tanggalGroup[tgl] = [];
+      tanggalGroup[tgl].push(item);
+    });
+
+    const sortedDates = Object.keys(tanggalGroup).sort((a, b) => {
+      // Sort dengan format dd/mm
+      const [da, ma] = a.split("/");
+      const [db, mb] = b.split("/");
+      return new Date(2025, mb - 1, da) - new Date(2025, ma - 1, db);
+    });
+
+    let adaYangTampil = false;
+
+    sortedDates.forEach((tgl) => {
+      if (filter && !tgl.includes(filter)) return;
+
+      adaYangTampil = true;
+
+      const items = tanggalGroup[tgl];
+      const totalPendapatan = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+      const groupDiv = document.createElement("div");
+      groupDiv.className = "border-t border-yellow-400 pt-3 mt-3";
+
+      const title = document.createElement("h3");
+      title.className = "text-yellow-300 font-semibold";
+      title.textContent = `Tanggal: ${tgl} | Total: Rp ${totalPendapatan.toLocaleString("id-ID")}`;
+      groupDiv.appendChild(title);
+
+      items.forEach((item) => {
+        const div = document.createElement("div");
+        div.className = "bg-gray-800 p-3 rounded text-white shadow";
+        div.innerHTML = `
+          <div><strong>Produk:</strong> ${item.namaProduk}</div>
+          <div><strong>Jumlah:</strong> ${item.jumlah}</div>
+          <div><strong>Total:</strong> Rp ${Number(item.total).toLocaleString("id-ID")}</div>
+        `;
+        groupDiv.appendChild(div);
+      });
+
+      rekapList.appendChild(groupDiv);
+    });
+
+    if (!adaYangTampil) {
+      rekapList.innerHTML = `<div class="text-gray-400 italic text-sm text-center">Tidak ada data untuk tanggal tersebut</div>`;
+    }
+  });
 
     let tanggalSebelumnya = "";
 
