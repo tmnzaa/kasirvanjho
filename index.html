@@ -363,15 +363,22 @@ function hitungKembalian() {
 
   if (!input || !kembalianDiv) return;
 
-  const bayar = parseInt(input.value);
+  // Format input agar bertitik
+  let rawValue = input.value.replace(/[^\d]/g, ""); // hanya angka
+  let formattedValue = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  input.value = formattedValue;
+
+  // Hitung kembalian berdasarkan angka asli
+  const bayar = parseInt(rawValue);
   if (isNaN(bayar) || bayar < total) {
     kembalianDiv.innerText = '';
     return;
   }
 
   const kembali = bayar - total;
-  kembalianDiv.innerText = `Kembalian: Rp ${kembali.toLocaleString()}`;
+  kembalianDiv.innerText = `Kembalian: Rp ${kembali.toLocaleString("id-ID")}`;
 }
+
 
 
   </script>
