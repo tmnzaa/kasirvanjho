@@ -87,6 +87,13 @@
     <button onclick="simpanTransaksi()" class="mt-3 w-full bg-yellow-400 text-black font-bold py-2 rounded">Simpan Transaksi</button>
   </div>
 
+<!-- TAMBAHAN DI DALAM HOME -->
+<div class="mt-4">
+  <label for="uangPembeli" class="block text-sm text-gray-300 mb-1">Uang Pembeli</label>
+  <input id="uangPembeli" type="number" placeholder="Masukkan jumlah uang" class="w-full p-2 rounded bg-gray-800 text-white" oninput="hitungKembalian()">
+</div>
+<div class="text-green-400 text-sm mt-1">Kembalian: <span id="kembalianText">Rp 0</span></div>
+
   <!-- TAMBAH PRODUK -->
   <div id="tambahTab" class="hidden">
     <h2 class="text-lg text-yellow-300 font-semibold mb-3">Tambah Produk</h2>
@@ -347,6 +354,44 @@
   renderKeranjang();
   renderRekap();
   loadProdukDariFirebase();
+
+function hitungKembalian() {
+  const uangPembeli = parseInt(document.getElementById('uangPembeli').value || '0');
+  const totalStr = document.getElementById('totalHarga').innerText.replace(/[^\d]/g, '');
+  const totalHarga = parseInt(totalStr);
+  const kembalian = uangPembeli - totalHarga;
+  document.getElementById('kembalianText').innerText = kembalian >= 0 ? formatRupiah(kembalian) : 'Rp 0';
+}
+
+async function simpanTransaksi() {
+  if (Object.keys(keranjang).length === 0) return alert("Keranjang kosong!");
+
+  const total = Object.values(keranjang).reduce((a, b) => a + (b.harga * b.jumlah), 0);
+  const uangPembeli = parseInt(document.getElementById('uangPembeli').value || '0');
+
+  if (uangPembeli < total) {
+    alert("Uang pembeli kurang!");
+    return;
+  }
+
+  const waktu = new Date().toLocaleString();
+  const transaksi = Object.values(keranjang);
+  const data = { waktu, transaksi, total, uangPembeli, kembalian: uangPembeli - total };
+
+  try {
+    const dbRef = ref(db, 'rekap');
+    await push(dbRef, data);
+    keranjang = {};
+    document.getElementById('uangPembeli').value = '';
+    document.getElementById('kembalianText').innerText = 'Rp 0';
+    renderKeranjang();
+    showNotif('Transaksi disimpan');
+  } catch (err) {
+    console.error(err);
+    alert("Gagal menyimpan");
+  }
+}
+
   </script>
 </body>
 </html>
