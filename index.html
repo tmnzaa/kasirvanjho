@@ -430,11 +430,15 @@ function formatInputRupiah(input) {
   }
 
   function tambahKeKeranjang(index) {
-    const item = produk[index];
-    keranjang[item.nama] = keranjang[item.nama] || { ...item, jumlah: 0 };
-    keranjang[item.nama].jumlah++;
-    renderKeranjang();
-  }
+  const item = produk[index];
+  keranjang[item.nama] = keranjang[item.nama] || { ...item, jumlah: 0 };
+  keranjang[item.nama].jumlah++;
+  renderKeranjang();
+
+  // Tampilkan notifikasi cantik, bukan alert Chrome
+  showNotif(`${item.nama} ditambahkan ke keranjang!`);
+}
+
 
   function ubahJumlah(nama, delta) {
     if (!keranjang[nama]) return;
