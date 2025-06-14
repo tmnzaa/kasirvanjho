@@ -251,25 +251,45 @@
     return;
   }
 
+  // Tampilkan progress bar
+  const progressWrapper = document.getElementById("progressWrapper");
+  const progressBar = document.getElementById("progressBar");
+  progressWrapper.classList.remove("hidden");
+  progressBar.style.width = "0%";
+
+  // Animasi progress berjalan
+  setTimeout(() => {
+    progressBar.style.width = "100%";
+  }, 100);
+
   const waktu = new Date().toLocaleString();
   const transaksi = Object.values(keranjang);
   const total = transaksi.reduce((a, b) => a + (b.harga * b.jumlah), 0);
-  
   const data = { waktu, transaksi, total };
 
   try {
     const dbRef = ref(db, 'rekap');
     await push(dbRef, data);
+
     keranjang = {};
     renderKeranjang();
-    showNotif('Transaksi disimpan');
     document.getElementById('uangPembeli').value = '';
     document.getElementById('kembalian').innerText = '';
+
+    // Setelah sukses, delay sebentar lalu reset progress
+    setTimeout(() => {
+      showNotif('Transaksi disimpan');
+      progressWrapper.classList.add("hidden");
+      progressBar.style.width = "0%";
+    }, 500);
   } catch (err) {
     console.error(err);
     showNotif("Gagal menyimpan transaksi");
+    progressWrapper.classList.add("hidden");
+    progressBar.style.width = "0%";
   }
 }
+
 
 
   function renderRekap() {
@@ -390,26 +410,6 @@ function hitungKembalian() {
 
   const kembali = bayar - total;
   kembalianDiv.innerText = `Kembalian: Rp ${kembali.toLocaleString("id-ID")}`;
-}
-
-function simpanTransaksi() {
-  // Tampilkan progress bar
-  document.getElementById("progressWrapper").classList.remove("hidden");
-  const bar = document.getElementById("progressBar");
-  bar.style.width = "0%"; // reset
-
-  setTimeout(() => {
-    bar.style.width = "100%";
-  }, 100); // supaya animasi bisa berjalan
-
-  // Simulasi proses transaksi (misalnya 2 detik)
-  setTimeout(() => {
-    alert("Transaksi Berhasil!");
-    document.getElementById("keranjangList").innerHTML = "";
-    document.getElementById("totalHarga").textContent = "Rp 0";
-    document.getElementById("progressWrapper").classList.add("hidden");
-    bar.style.width = "0%"; // reset untuk selanjutnya
-  }, 2000);
 }
 
 
