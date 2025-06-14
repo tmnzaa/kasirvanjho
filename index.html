@@ -80,6 +80,15 @@
   <h2 class="text-lg text-yellow-300 font-semibold mb-2">Menu</h2>
   <div id="menuList" class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4 w-full"></div>
 
+<!-- INPUT SUARA -->
+<div class="my-4">
+  <button onclick="mulaiDengar()" class="w-full bg-yellow-500 text-black font-bold py-2 rounded flex items-center justify-center gap-2">
+    🎤 Input Suara
+  </button>
+  <div id="notifSuara" class="text-sm text-yellow-300 mt-2"></div>
+</div>
+
+
   <h3 class="text-yellow-300 text-sm font-semibold mt-2">Keranjang</h3>
   <div id="keranjangList" class="space-y-2 my-2 max-h-[200px] overflow-y-auto pr-2"></div>
 
@@ -96,27 +105,17 @@
 
 
   <!-- TAMBAH PRODUK -->
-<div id="tambahTab" class="hidden">
-  <h2 class="text-lg text-yellow-300 font-semibold mb-3">Tambah Produk</h2>
-  <div class="space-y-3">
-
-    <!-- Input Nama Produk dengan Mic -->
-    <div class="relative">
-      <input id="namaBaru" placeholder="Nama Produk" class="w-full p-3 rounded bg-gray-800 text-white pr-10" />
-      <button onclick="dengarNamaProduk()" class="absolute right-2 top-1/2 -translate-y-1/2 text-yellow-400">
-        <i class="bi bi-mic-fill text-xl"></i>
-      </button>
+  <div id="tambahTab" class="hidden">
+    <h2 class="text-lg text-yellow-300 font-semibold mb-3">Tambah Produk</h2>
+    <div class="space-y-3">
+      <input id="namaBaru" placeholder="Nama Produk" class="w-full p-3 rounded bg-gray-800 text-white" />
+      <input id="hargaBaru" placeholder="Harga (contoh: 2000)" class="w-full p-3 rounded bg-gray-800 text-white" oninput="formatHargaInput(this)" />
+      <button onclick="tambahProduk()" class="w-full bg-yellow-400 text-black font-bold py-3 rounded">Tambah</button>
     </div>
 
-    <!-- Input Harga -->
-    <input id="hargaBaru" placeholder="Harga (contoh: 2000)" class="w-full p-3 rounded bg-gray-800 text-white" oninput="formatHargaInput(this)" />
-    <button onclick="tambahProduk()" class="w-full bg-yellow-400 text-black font-bold py-3 rounded">Tambah</button>
+    <h3 class="text-yellow-300 font-semibold mt-6 mb-2">Daftar Produk</h3>
+    <div id="daftarProduk" class="space-y-2"></div>
   </div>
-
-  <h3 class="text-yellow-300 font-semibold mt-6 mb-2">Daftar Produk</h3>
-  <div id="daftarProduk" class="space-y-2"></div>
-</div>
-
 
   <!-- REKAP -->
   <div id="rekapTab" class="hidden">
@@ -396,31 +395,47 @@ function hitungKembalian() {
   kembalianDiv.innerText = `Kembalian: Rp ${kembali.toLocaleString("id-ID")}`;
 }
 
-function dengarNamaProduk() {
-  if (!('webkitSpeechRecognition' in window)) {
-    alert("Browser kamu tidak mendukung input suara.");
-    return;
+
+  // Fungsi untuk mulai mendengarkan suara
+  function mulaiDengar() {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert('Browser kamu tidak mendukung input suara. Coba pakai Google Chrome.');
+      return;
+    }
+
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = 'id-ID';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    document.getElementById("notifSuara").textContent = "🎙️ Mendengarkan...";
+
+    recognition.start();
+
+    recognition.onresult = function(event) {
+      const hasil = event.results[0][0].transcript.toLowerCase();
+      document.getElementById("notifSuara").textContent = "✅ Kamu bilang: " + hasil;
+
+      // Cari produk yang namanya mengandung kata yang diucapkan
+      const semuaProduk = document.querySelectorAll("#menuList > div");
+      let ditemukan = false;
+      semuaProduk.forEach(card => {
+        const namaProduk = card.querySelector("h3").textContent.toLowerCase();
+        if (hasil.includes(namaProduk)) {
+          card.click(); // klik otomatis
+          ditemukan = true;
+        }
+      });
+
+      if (!ditemukan) {
+        document.getElementById("notifSuara").textContent += "\n❌ Produk tidak ditemukan.";
+      }
+    };
+
+    recognition.onerror = function(event) {
+      document.getElementById("notifSuara").textContent = "❌ Gagal mendengar: " + event.error;
+    };
   }
-
-  const recognition = new webkitSpeechRecognition();
-  recognition.lang = 'id-ID';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  showNotif("Mendengarkan...");
-
-  recognition.start();
-
-  recognition.onresult = function(event) {
-    const hasil = event.results[0][0].transcript;
-    document.getElementById("namaBaru").value = hasil;
-    showNotif("Didengar: " + hasil);
-  };
-
-  recognition.onerror = function(event) {
-    showNotif("Gagal mendengar: " + event.error);
-  };
-}
 
 
   </script>
