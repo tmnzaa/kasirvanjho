@@ -96,17 +96,27 @@
 
 
   <!-- TAMBAH PRODUK -->
-  <div id="tambahTab" class="hidden">
-    <h2 class="text-lg text-yellow-300 font-semibold mb-3">Tambah Produk</h2>
-    <div class="space-y-3">
-      <input id="namaBaru" placeholder="Nama Produk" class="w-full p-3 rounded bg-gray-800 text-white" />
-      <input id="hargaBaru" placeholder="Harga (contoh: 2000)" class="w-full p-3 rounded bg-gray-800 text-white" oninput="formatHargaInput(this)" />
-      <button onclick="tambahProduk()" class="w-full bg-yellow-400 text-black font-bold py-3 rounded">Tambah</button>
+<div id="tambahTab" class="hidden">
+  <h2 class="text-lg text-yellow-300 font-semibold mb-3">Tambah Produk</h2>
+  <div class="space-y-3">
+
+    <!-- Input Nama Produk dengan Mic -->
+    <div class="relative">
+      <input id="namaBaru" placeholder="Nama Produk" class="w-full p-3 rounded bg-gray-800 text-white pr-10" />
+      <button onclick="dengarNamaProduk()" class="absolute right-2 top-1/2 -translate-y-1/2 text-yellow-400">
+        <i class="bi bi-mic-fill text-xl"></i>
+      </button>
     </div>
 
-    <h3 class="text-yellow-300 font-semibold mt-6 mb-2">Daftar Produk</h3>
-    <div id="daftarProduk" class="space-y-2"></div>
+    <!-- Input Harga -->
+    <input id="hargaBaru" placeholder="Harga (contoh: 2000)" class="w-full p-3 rounded bg-gray-800 text-white" oninput="formatHargaInput(this)" />
+    <button onclick="tambahProduk()" class="w-full bg-yellow-400 text-black font-bold py-3 rounded">Tambah</button>
   </div>
+
+  <h3 class="text-yellow-300 font-semibold mt-6 mb-2">Daftar Produk</h3>
+  <div id="daftarProduk" class="space-y-2"></div>
+</div>
+
 
   <!-- REKAP -->
   <div id="rekapTab" class="hidden">
@@ -386,6 +396,31 @@ function hitungKembalian() {
   kembalianDiv.innerText = `Kembalian: Rp ${kembali.toLocaleString("id-ID")}`;
 }
 
+function dengarNamaProduk() {
+  if (!('webkitSpeechRecognition' in window)) {
+    alert("Browser kamu tidak mendukung input suara.");
+    return;
+  }
+
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = 'id-ID';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  showNotif("Mendengarkan...");
+
+  recognition.start();
+
+  recognition.onresult = function(event) {
+    const hasil = event.results[0][0].transcript;
+    document.getElementById("namaBaru").value = hasil;
+    showNotif("Didengar: " + hasil);
+  };
+
+  recognition.onerror = function(event) {
+    showNotif("Gagal mendengar: " + event.error);
+  };
+}
 
 
   </script>
