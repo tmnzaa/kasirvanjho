@@ -356,20 +356,7 @@
   renderRekap();
   loadProdukDariFirebase();
 
-const uangPembeliInput = document.getElementById("uangPembeli");
 
-uangPembeliInput.addEventListener("input", function (e) {
-  const value = e.target.value.replace(/\D/g, ""); // Hanya angka
-  if (!value) {
-    e.target.value = "";
-    document.getElementById("kembalian").textContent = "";
-    return;
-  }
-
-  const formatted = parseInt(value).toLocaleString("id-ID");
-  e.target.value = formatted;
-  hitungKembalian(); // Hitung kembalian otomatis
-});
 
 const uangPembeliInput = document.getElementById("uangPembeli");
   const totalHargaSpan = document.getElementById("totalHarga");
