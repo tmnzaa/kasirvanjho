@@ -140,12 +140,23 @@
     <div id="daftarProduk" class="space-y-2"></div>
   </div>
 
-  <!-- REKAP -->
-  <div id="rekapTab" class="hidden">
-    <h2 class="text-lg text-yellow-300 font-semibold mb-2">Rekap Transaksi</h2>
-    <input id="cariRekap" oninput="renderRekap()" placeholder="Cari tanggal contoh: 13/06" class="w-full mb-3 p-2 rounded bg-gray-800 text-white" />
-    <div id="rekapList" class="space-y-3"></div>
+  <!-- PENGELUARAN -->
+<div id="pengeluaranTab" class="hidden">
+  <h2 class="text-lg text-yellow-300 font-semibold mb-2">Catat Pengeluaran</h2>
+  <div class="mb-4 space-y-2">
+    <input id="namaPengeluaran" placeholder="Nama Pengeluaran" class="w-full p-2 rounded bg-gray-800 text-white" />
+    <input id="hargaPengeluaran" placeholder="Harga (contoh: 2000)" class="w-full p-2 rounded bg-gray-800 text-white" oninput="formatHargaInput(this)" />
+    <button onclick="simpanPengeluaran()" class="w-full bg-yellow-400 text-black py-2 font-bold rounded">Simpan</button>
   </div>
+
+  <h3 class="text-yellow-300 font-semibold mb-2">Riwayat Pengeluaran</h3>
+  <input id="tanggalFilter" type="date" onchange="loadPengeluaran()" class="w-full mb-3 p-2 rounded bg-gray-800 text-white" />
+  <div id="listPengeluaran" class="space-y-2"></div>
+</div>
+
+
+
+
 
   <!-- Floating QR Support Icon -->
   <div id="toggleButton" class="floating-icon" data-bs-toggle="modal" data-bs-target="#supportModal" title="Support Me">
@@ -175,10 +186,11 @@
 
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
-    <button onclick="showTab('homeTab', this)" class="active"><i class="bi bi-house-fill text-xl"></i>Home</button>
-    <button onclick="showTab('tambahTab', this)"><i class="bi bi-plus-circle text-xl"></i>Tambah</button>
-    <button onclick="showTab('rekapTab', this)"><i class="bi bi-clipboard-data text-xl"></i>Rekap</button>
-  </div>
+  <button onclick="showTab('homeTab', this)" class="active"><i class="bi bi-house-fill text-xl"></i>Home</button>
+  <button onclick="showTab('tambahTab', this)"><i class="bi bi-plus-circle text-xl"></i>Tambah</button>
+  <button onclick="showTab('rekapTab', this)"><i class="bi bi-clipboard-data text-xl"></i>Rekap</button>
+ <button onclick="showTab('pengeluaranTab', this)"><i class="bi bi-calculator-fill text-xl"></i>Pengeluaran</button>
+</div>
 
   <!-- NOTIF -->
   <div id="notif" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-4 py-2 rounded shadow font-semibold text-sm hidden z-50"></div>
@@ -194,7 +206,164 @@
     </div>
   </div>
 
+ <!-- Modal Edit Rekap -->
+<div id="modalEditRekap" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+  <div class="bg-[#1f1f1f] text-white p-6 rounded-xl w-[90%] max-w-md shadow-lg border border-gray-600">
+    <h3 class="font-bold text-lg mb-4 text-center text-yellow-400">Edit Pesanan</h3>
+    <div id="daftarProdukEdit" class="space-y-3 max-h-72 overflow-y-auto pr-2"></div>
+    <div class="mt-4 space-y-2">
+      <button onclick="submitEditRekap()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded font-semibold transition">Simpan Perubahan</button>
+      <button onclick="tutupModalEditRekap()" class="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded transition">Batal</button>
+    </div>
+  </div>
+</div>
+
+
+
+
   <script>
+
+    function formatHargaInput(el) {
+  let value = el.value.replace(/[^\d]/g, "");
+  el.value = value ? value.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
+}
+
+async function simpanPengeluaran() {
+  const nama = document.getElementById("namaPengeluaran").value.trim();
+  const hargaStr = document.getElementById("hargaPengeluaran").value.replace(/[^\d]/g, "");
+  const harga = parseInt(hargaStr);
+  const tanggal = new Date().toISOString().split("T")[0];
+  const waktuLengkap = new Date().toLocaleString();
+
+  if (!nama || isNaN(harga)) return showNotif("Isi nama dan harga dengan benar!");
+
+  const pengeluaranRef = ref(db, 'pengeluaran');
+  await push(pengeluaranRef, { nama, harga, tanggal, waktu: waktuLengkap });
+
+  document.getElementById("namaPengeluaran").value = '';
+  document.getElementById("hargaPengeluaran").value = '';
+  showNotif("Pengeluaran disimpan!");
+  loadPengeluaran(); // tampilkan langsung
+}
+
+function loadPengeluaran() {
+  const list = document.getElementById("listPengeluaran");
+  const tanggalFilter = document.getElementById("tanggalFilter").value || new Date().toISOString().split("T")[0];
+  const pengeluaranRef = ref(db, 'pengeluaran');
+
+  onValue(pengeluaranRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    const arr = Object.values(data).filter(item => item.tanggal === tanggalFilter);
+    list.innerHTML = '';
+
+    if (arr.length === 0) {
+      list.innerHTML = `<p class="text-sm text-gray-400 text-center">Belum ada pengeluaran hari ini.</p>`;
+      return;
+    }
+
+    let total = 0;
+    arr.forEach((item, index) => {
+  total += item.harga;
+  list.innerHTML += `
+    <div class="bg-gray-800 p-2 rounded flex justify-between items-center">
+      <div>
+        <p>${item.nama}</p>
+        <p class="text-sm text-gray-400">${formatRupiah(item.harga)}</p>
+      </div>
+      <button onclick="hapusPengeluaran('${Object.keys(data)[index]}')" class="text-red-400 hover:text-red-600"><i class="bi bi-trash"></i></button>
+    </div>`;
+});
+
+
+    list.innerHTML += `
+      <div class="bg-gray-700 mt-3 p-2 rounded text-right font-bold text-yellow-300">
+        Total: ${formatRupiah(total)}
+      </div>`;
+  });
+}
+
+function hapusPengeluaran(key) {
+  showConfirm("Yakin hapus pengeluaran ini?", (ok) => {
+    if (!ok) return;
+    const delRef = ref(db, 'pengeluaran/' + key);
+    remove(delRef).then(() => {
+      showNotif("Pengeluaran dihapus!");
+    });
+  });
+}
+
+
+
+    let editRekapKey = null;
+let transaksiBaru = [];
+
+function bukaEditRekap(key, transaksiLama, totalLama) {
+  editRekapKey = key;
+  transaksiBaru = [...transaksiLama]; // clone transaksi lama
+  document.getElementById("modalEditRekap").classList.remove("hidden");
+
+  const container = document.getElementById("daftarProdukEdit");
+  container.innerHTML = '';
+
+  produk.forEach((p) => {
+    let jumlah = transaksiBaru.find(t => t.nama === p.nama)?.jumlah || 0;
+    container.innerHTML += `
+      <div class="flex justify-between items-center bg-[#2a2a2a] rounded px-3 py-2 border border-gray-700">
+        <div>
+          <p class="font-semibold text-yellow-300">${p.nama}</p>
+          <p class="text-sm text-gray-400">${formatRupiah(p.harga)}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="ubahJumlahEdit('${p.nama}', -1)" class="px-2 bg-gray-700 rounded text-white">-</button>
+          <span id="jumlahEdit_${p.nama}" class="min-w-[20px] text-center">${jumlah}</span>
+          <button onclick="ubahJumlahEdit('${p.nama}', 1)" class="px-2 bg-gray-700 rounded text-white">+</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function ubahJumlahEdit(nama, delta) {
+  const index = transaksiBaru.findIndex(t => t.nama === nama);
+  if (index === -1 && delta > 0) {
+    const produkItem = produk.find(p => p.nama === nama);
+    transaksiBaru.push({ nama: produkItem.nama, harga: produkItem.harga, jumlah: 1 });
+  } else if (index !== -1) {
+    transaksiBaru[index].jumlah += delta;
+    if (transaksiBaru[index].jumlah <= 0) {
+      transaksiBaru.splice(index, 1);
+    }
+  }
+  document.getElementById(`jumlahEdit_${nama}`).innerText =
+    transaksiBaru.find(t => t.nama === nama)?.jumlah || 0;
+}
+
+function tutupModalEditRekap() {
+  document.getElementById("modalEditRekap").classList.add("hidden");
+  editRekapKey = null;
+}
+
+function submitEditRekap() {
+  const totalBaru = transaksiBaru.reduce((sum, item) => sum + item.harga * item.jumlah, 0);
+  const dbRef = ref(db, 'rekap/' + editRekapKey);
+  import("https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js").then(({ update }) => {
+    update(dbRef, { transaksi: transaksiBaru, total: totalBaru }).then(() => {
+      showNotif("Rekap diperbarui!");
+      tutupModalEditRekap();
+    });
+  });
+}
+
+function formatInputRupiah(input) {
+  let angka = input.value.replace(/[^\d]/g, '');
+  if (!angka) {
+    input.value = '';
+    return;
+  }
+  input.value = angka.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+
      let produk = [];
   let keranjang = {};
 
@@ -360,24 +529,35 @@
     }
 
     let tanggalSebelumnya = "";
+    let totalHariIni = 0;
 
-    keys.forEach(key => {
+    keys.forEach((key, idx) => {
       const r = data[key];
       const waktu = r.waktu.toLowerCase();
       if (keyword && !waktu.includes(keyword)) return;
 
-      // Ambil tanggal dalam format dd/mm dari string waktu
-      const tanggal = waktu.split(',')[0] || waktu.split(' ')[0]; // misalnya "13/06/2024"
-      const tanggalFormat = tanggal.slice(0, 5); // "13/06"
+      const tanggal = waktu.split(',')[0] || waktu.split(' ')[0];
+      const tanggalFormat = tanggal.slice(0, 5); // contoh: "14/06"
 
-      // Tambahkan garis jika beda hari
       if (tanggalFormat !== tanggalSebelumnya) {
+        // Tampilkan total hari sebelumnya
+        if (tanggalSebelumnya && totalHariIni > 0) {
+          list.innerHTML += `
+            <div class="text-right mt-2 mb-4 font-bold text-yellow-400">
+              Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}
+            </div>`;
+        }
+
+        // Reset & tampilkan header tanggal baru
         list.innerHTML += `
           <div class="text-center text-gray-400 border-t border-b border-gray-600 py-2 mt-4 font-semibold">
             ${tanggalFormat}
           </div>`;
         tanggalSebelumnya = tanggalFormat;
+        totalHariIni = 0;
       }
+
+      totalHariIni += r.total;
 
       const detail = r.transaksi.map(t => `${t.jumlah}x ${t.nama} = ${formatRupiah(t.harga * t.jumlah)}`).join('<br>');
 
@@ -385,14 +565,26 @@
         <div class="bg-gray-800 p-3 rounded shadow">
           <div class="flex justify-between items-center">
             <p class="text-sm text-gray-400">${r.waktu}</p>
-            <button onclick="hapusRekapFirebase('${key}')" class="text-red-400 hover:text-red-600"><i class="bi bi-trash"></i></button>
+            <div class="flex gap-2">
+              <button onclick='bukaEditRekap("${key}", ${JSON.stringify(r.transaksi)}, ${r.total})' class="text-blue-400 hover:text-blue-600"><i class="bi bi-pencil-square"></i></button>
+              <button onclick="hapusRekapFirebase('${key}')" class="text-red-400 hover:text-red-600"><i class="bi bi-trash"></i></button>
+            </div>
           </div>
           <div class="text-sm mt-1">${detail}</div>
           <p class="mt-1 font-bold text-yellow-400">Total: ${formatRupiah(r.total)}</p>
         </div>`;
     });
+
+    // Total untuk hari terakhir di bawah
+    if (tanggalSebelumnya && totalHariIni > 0) {
+      list.innerHTML += `
+        <div class="text-right mt-2 mb-4 font-bold text-yellow-400">
+          Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}
+        </div>`;
+    }
   });
 }
+
 
   function hapusRekapFirebase(key) {
     showConfirm("Yakin hapus transaksi ini?", (ok) => {
@@ -404,13 +596,16 @@
   }
 
   function showTab(id, el) {
-    ['homeTab', 'tambahTab', 'rekapTab'].forEach(t => document.getElementById(t).classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-    document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
-    el?.classList.add('active');
-    if (id === 'tambahTab') renderDaftarProduk();
-    if (id === 'rekapTab') renderRekap();
-  }
+  ['homeTab', 'tambahTab', 'rekapTab', 'pengeluaranTab'].forEach(t => document.getElementById(t)?.classList.add('hidden'));
+  document.getElementById(id)?.classList.remove('hidden');
+  document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.remove('active'));
+  el?.classList.add('active');
+
+  if (id === 'tambahTab') renderDaftarProduk();
+  if (id === 'rekapTab') renderRekap();
+  if (id === 'pengeluaranTab') loadPengeluaran();
+}
+
 
   let confirmCallback = null;
   function showConfirm(message, callback) {
