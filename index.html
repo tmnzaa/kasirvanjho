@@ -357,21 +357,20 @@
   loadProdukDariFirebase();
 
 function hitungKembalian() {
-  const totalText = document.getElementById("totalHarga").textContent;
-  const total = parseInt(totalText.replace("Rp", "").replace(/\./g, "").trim()) || 0;
+  const total = Object.values(keranjang).reduce((sum, item) => sum + (item.harga * item.jumlah), 0);
+  const input = document.getElementById('uangPembeli');
+  const kembalianDiv = document.getElementById('kembalian');
 
-  const uangPembeliInput = document.getElementById("uangPembeli").value;
-  const uangPembeli = parseInt(uangPembeliInput);
+  if (!input || !kembalianDiv) return;
 
-  if (!uangPembeliInput || isNaN(uangPembeli)) {
-    document.getElementById("kembalian").textContent = "";
+  const bayar = parseInt(input.value);
+  if (isNaN(bayar) || bayar < total) {
+    kembalianDiv.innerText = '';
     return;
   }
 
-  const kembalian = uangPembeli - total;
-  const hasilFormat = kembalian < 0 ? 0 : kembalian;
-
-  document.getElementById("kembalian").textContent = "Kembalian: Rp " + hasilFormat.toLocaleString("id-ID");
+  const kembali = bayar - total;
+  kembalianDiv.innerText = `Kembalian: Rp ${kembali.toLocaleString()}`;
 }
 
 
