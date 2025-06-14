@@ -356,22 +356,37 @@
   renderRekap();
   loadProdukDariFirebase();
 
+const uangPembeliInput = document.getElementById("uangPembeli");
+
+uangPembeliInput.addEventListener("input", function (e) {
+  const value = e.target.value.replace(/\D/g, ""); // Hanya angka
+  if (!value) {
+    e.target.value = "";
+    document.getElementById("kembalian").textContent = "";
+    return;
+  }
+
+  const formatted = parseInt(value).toLocaleString("id-ID");
+  e.target.value = formatted;
+  hitungKembalian(); // Hitung kembalian otomatis
+});
+
 function hitungKembalian() {
   const totalText = document.getElementById("totalHarga").textContent;
   const total = parseInt(totalText.replace("Rp", "").replace(/\./g, "").trim()) || 0;
 
-  const uangPembeliInput = document.getElementById("uangPembeli").value;
-  const uangPembeli = parseInt(uangPembeliInput);
+  const uangPembeliText = uangPembeliInput.value.replace(/\./g, "").trim();
+  const uangPembeli = parseInt(uangPembeliText);
 
-  if (!uangPembeliInput || isNaN(uangPembeli)) {
+  if (!uangPembeliText || isNaN(uangPembeli)) {
     document.getElementById("kembalian").textContent = "";
     return;
   }
 
   const kembalian = uangPembeli - total;
-  const hasilFormat = kembalian < 0 ? 0 : kembalian;
+  const hasil = kembalian < 0 ? 0 : kembalian;
 
-  document.getElementById("kembalian").textContent = "Kembalian: Rp " + hasilFormat.toLocaleString("id-ID");
+  document.getElementById("kembalian").textContent = "Kembalian: Rp " + hasil.toLocaleString("id-ID");
 }
 
 
