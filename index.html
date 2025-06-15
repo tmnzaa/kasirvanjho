@@ -639,11 +639,17 @@ function renderRekap() {
           list.innerHTML += `
   <div class="flex justify-between items-center mt-2 mb-4">
     <div class="font-bold text-yellow-400">Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}</div>
-<div onclick="kirimWA('${tanggalSebelumnya}')" class="text-green-400 text-sm underline cursor-pointer">
-  Kirim Rekap
-</div>
+    <div id="kirimWA_${tanggalSebelumnya}" class="text-green-400 text-sm underline cursor-pointer">
+      Kirim Rekap
+    </div>
   </div>`;
-        }
+  setTimeout(() => {
+  const tombol = document.getElementById("kirimWA_" + tanggalSebelumnya);
+  if (tombol) {
+    tombol.addEventListener("click", () => kirimWA(tanggalSebelumnya));
+  }
+}, 100);
+
 
         list.innerHTML += `
           <div class="text-center text-gray-400 border-t border-b border-gray-600 py-2 mt-4 font-semibold">
