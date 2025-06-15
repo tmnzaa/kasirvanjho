@@ -279,11 +279,8 @@
 
   const link = `https://wa.me/6287840376082?text=${encodeURIComponent(pesan)}`;
 
-  // Pakai window.location agar compatible dengan Kodular
-  window.location.href = link;
-
-  // Jika pakai WebViewInterface (opsional)
-  // window.WebViewInterface.call("kirimWA", link);
+  // Kirim ke Kodular lewat WebViewString
+  window.AppInventor.setWebViewString(link);
 }
 
 
@@ -640,7 +637,7 @@ function renderRekap() {
           list.innerHTML += `
   <div class="flex justify-between items-center mt-2 mb-4">
     <div class="font-bold text-yellow-400">Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}</div>
-    <a href="#" onclick="kirimWA('${tanggalSebelumnya}')" class="text-green-400 text-sm underline">Kirim Rekap</a>
+    <a href="#" onclick="kirimWA('${tanggalSebelumnya}')" class="text-green-400 text-sm underline">Kirim Rekapp</a>
   </div>`;
         }
 
