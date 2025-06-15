@@ -262,8 +262,8 @@
 
     const detail = el.querySelector(".text-sm.mt-1")?.innerText || "";
     const totalText = el.querySelector(".mt-1.font-bold")?.innerText || "";
-
     const totalAngka = parseInt(totalText.replace(/[^\d]/g, '')) || 0;
+
     totalSemua += totalAngka;
 
     pesan += `🕒 ${waktu}\n${detail}\n${totalText}\n\n`;
@@ -276,15 +276,17 @@
   }
 
   pesan += `🧾 *Total Semua:* Rp ${totalSemua.toLocaleString("id-ID")}`;
-  const link = `https://wa.me/6287840376082?text=${encodeURIComponent(pesan)}`;
 
-  // Ini penting!
+  const waLink = `https://wa.me/6287840376082?text=${encodeURIComponent(pesan)}`;
+
+  // Kirim ke Kodular lewat WebViewString
   if (window.AppInventor) {
-    window.AppInventor.setWebViewString(link);
+    window.AppInventor.setWebViewString(waLink);
   } else {
-    window.open(link, "_blank");
+    window.open(waLink, "_blank"); // fallback
   }
 }
+
 
 
 
@@ -639,7 +641,7 @@ function renderRekap() {
           list.innerHTML += `
   <div class="flex justify-between items-center mt-2 mb-4">
     <div class="font-bold text-yellow-400">Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}</div>
-    <a href="#" onclick="kirimWA('${tanggalSebelumnya}')" class="text-green-400 text-sm underline">Kirim Rekapp</a>
+    <a href="#" onclick="kirimWA('${tanggalSebelumnya}')" class="text-green-400 text-sm underline">Kirim Rekap</a>
   </div>`;
         }
 
@@ -775,4 +777,4 @@ function hitungKembalian() {
 
   </script>
 </body>
-</html>-
+</html>
