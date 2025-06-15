@@ -639,7 +639,9 @@ function renderRekap() {
           list.innerHTML += `
   <div class="flex justify-between items-center mt-2 mb-4">
     <div class="font-bold text-yellow-400">Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}</div>
-    <a href="#" onclick="kirimWA('${tanggalSebelumnya}')" class="text-green-400 text-sm underline">Kirim Rekap</a>
+<div onclick="kirimWA('${tanggalSebelumnya}')" class="text-green-400 text-sm underline cursor-pointer">
+  Kirim Rekap
+</div>
   </div>`;
         }
 
