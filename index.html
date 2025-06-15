@@ -589,36 +589,24 @@ function renderRekap() {
     }
 
     let tanggalSebelumnya = "";
-    let totalHariIni = 0;
+    let totalSemua = 0;
 
-    keys.forEach((key, idx) => {
+    keys.forEach((key) => {
       const r = data[key];
       const waktu = r.waktu.toLowerCase();
       if (keyword && !waktu.includes(keyword)) return;
 
       const tanggal = waktu.split(',')[0] || waktu.split(' ')[0];
-      const tanggalFormat = tanggal.slice(0, 5); // contoh: "14/06"
+      const tanggalFormat = tanggal.slice(0, 5);
 
-      // Ganti hari
+      // Tambahkan garis pemisah jika tanggal berubah
       if (tanggalFormat !== tanggalSebelumnya) {
-        // tampilkan total hari sebelumnya dulu
-        if (tanggalSebelumnya && totalHariIni > 0) {
-          list.innerHTML += `
-            <div class="text-right mt-1 mb-3 font-bold text-yellow-300">
-              Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}
-            </div>`;
-        }
-
-        // reset dan tampilkan header hari baru
         list.innerHTML += `
           <div class="text-center text-gray-400 border-t border-b border-gray-600 py-2 mt-4 font-semibold">
             ${tanggalFormat}
           </div>`;
         tanggalSebelumnya = tanggalFormat;
-        totalHariIni = 0;
       }
-
-      totalHariIni += r.total;
 
       const detail = r.transaksi.map(t => `${t.jumlah}x ${t.nama} = ${formatRupiah(t.harga * t.jumlah)}`).join('<br>');
 
@@ -634,17 +622,18 @@ function renderRekap() {
           <div class="text-sm mt-1">${detail}</div>
           <p class="mt-1 font-bold text-yellow-400">Total: ${formatRupiah(r.total)}</p>
         </div>`;
+
+      totalSemua += r.total;
     });
 
-    // tampilkan total untuk hari terakhir
-    if (tanggalSebelumnya && totalHariIni > 0) {
-      list.innerHTML += `
-        <div class="text-right mt-1 mb-3 font-bold text-yellow-300">
-          Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}
-        </div>`;
-    }
+    // Tambahkan total semua transaksi di bawah
+    list.innerHTML += `
+      <div class="text-right mt-6 text-lg font-bold text-yellow-400 border-t border-gray-600 pt-3">
+        Total Semua Transaksi: ${formatRupiah(totalSemua)}
+      </div>`;
   });
 }
+
 
 
 
