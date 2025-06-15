@@ -589,7 +589,8 @@ function renderRekap() {
     }
 
     let tanggalSebelumnya = "";
-    let totalSemua = 0;
+    let totalHariIni = 0;
+    let totalSemua = 0; // ✅ Tambahkan ini
 
     keys.forEach((key) => {
       const r = data[key];
@@ -599,14 +600,24 @@ function renderRekap() {
       const tanggal = waktu.split(',')[0] || waktu.split(' ')[0];
       const tanggalFormat = tanggal.slice(0, 5);
 
-      // Tambahkan garis pemisah jika tanggal berubah
       if (tanggalFormat !== tanggalSebelumnya) {
+        if (tanggalSebelumnya && totalHariIni > 0) {
+          list.innerHTML += `
+            <div class="text-right mt-2 mb-4 font-bold text-yellow-400">
+              Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}
+            </div>`;
+        }
+
         list.innerHTML += `
           <div class="text-center text-gray-400 border-t border-b border-gray-600 py-2 mt-4 font-semibold">
             ${tanggalFormat}
           </div>`;
         tanggalSebelumnya = tanggalFormat;
+        totalHariIni = 0;
       }
+
+      totalHariIni += r.total;
+      totalSemua += r.total; // ✅ Tambahkan ini
 
       const detail = r.transaksi.map(t => `${t.jumlah}x ${t.nama} = ${formatRupiah(t.harga * t.jumlah)}`).join('<br>');
 
@@ -622,17 +633,24 @@ function renderRekap() {
           <div class="text-sm mt-1">${detail}</div>
           <p class="mt-1 font-bold text-yellow-400">Total: ${formatRupiah(r.total)}</p>
         </div>`;
-
-      totalSemua += r.total;
     });
 
-    // Tambahkan total semua transaksi di bawah
+    // Total untuk hari terakhir
+    if (tanggalSebelumnya && totalHariIni > 0) {
+      list.innerHTML += `
+        <div class="text-right mt-2 mb-4 font-bold text-yellow-400">
+          Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}
+        </div>`;
+    }
+
+    // ✅ Tambahkan total semua transaksi di bawah
     list.innerHTML += `
       <div class="text-right mt-6 text-lg font-bold text-yellow-400 border-t border-gray-600 pt-3">
         Total Semua Transaksi: ${formatRupiah(totalSemua)}
       </div>`;
   });
 }
+
 
 
 
