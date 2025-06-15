@@ -262,9 +262,8 @@
 
     const detail = el.querySelector(".text-sm.mt-1")?.innerText || "";
     const totalText = el.querySelector(".mt-1.font-bold")?.innerText || "";
-
-    // Ekstrak angka dari total (misal: "Total: Rp 12.000" → 12000)
     const totalAngka = parseInt(totalText.replace(/[^\d]/g, '')) || 0;
+
     totalSemua += totalAngka;
 
     pesan += `🕒 ${waktu}\n${detail}\n${totalText}\n\n`;
@@ -276,12 +275,17 @@
     return;
   }
 
-  // Tambahkan total semua di akhir pesan
   pesan += `🧾 *Total Semua:* Rp ${totalSemua.toLocaleString("id-ID")}`;
 
   const link = `https://wa.me/6287840376082?text=${encodeURIComponent(pesan)}`;
-  window.open(link, "_blank");
+
+  // Pakai window.location agar compatible dengan Kodular
+  window.location.href = link;
+
+  // Jika pakai WebViewInterface (opsional)
+  // window.WebViewInterface.call("kirimWA", link);
 }
+
 
 
 
