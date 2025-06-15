@@ -263,7 +263,6 @@
     const detail = el.querySelector(".text-sm.mt-1")?.innerText || "";
     const totalText = el.querySelector(".mt-1.font-bold")?.innerText || "";
     const totalAngka = parseInt(totalText.replace(/[^\d]/g, '')) || 0;
-
     totalSemua += totalAngka;
 
     pesan += `🕒 ${waktu}\n${detail}\n${totalText}\n\n`;
@@ -276,14 +275,13 @@
   }
 
   pesan += `🧾 *Total Semua:* Rp ${totalSemua.toLocaleString("id-ID")}`;
-
   const waLink = `https://wa.me/6287840376082?text=${encodeURIComponent(pesan)}`;
 
-  // Kirim ke Kodular lewat WebViewString
+  // WAJIB pakai WebViewString
   if (window.AppInventor) {
     window.AppInventor.setWebViewString(waLink);
   } else {
-    window.open(waLink, "_blank"); // fallback
+    window.open(waLink, "_blank");
   }
 }
 
