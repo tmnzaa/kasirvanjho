@@ -573,8 +573,7 @@ function formatInputRupiah(input) {
 }
 
 
-
-  function renderRekap() {
+function renderRekap() {
   const list = document.getElementById('rekapList');
   const keyword = (document.getElementById('cariRekap')?.value || "").toLowerCase();
   const dbRef = ref(db, 'rekap');
@@ -600,16 +599,17 @@ function formatInputRupiah(input) {
       const tanggal = waktu.split(',')[0] || waktu.split(' ')[0];
       const tanggalFormat = tanggal.slice(0, 5); // contoh: "14/06"
 
+      // Ganti hari
       if (tanggalFormat !== tanggalSebelumnya) {
-        // Tampilkan total hari sebelumnya
+        // tampilkan total hari sebelumnya dulu
         if (tanggalSebelumnya && totalHariIni > 0) {
           list.innerHTML += `
-            <div class="text-right mt-2 mb-4 font-bold text-yellow-400">
+            <div class="text-right mt-1 mb-3 font-bold text-yellow-300">
               Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}
             </div>`;
         }
 
-        // Reset & tampilkan header tanggal baru
+        // reset dan tampilkan header hari baru
         list.innerHTML += `
           <div class="text-center text-gray-400 border-t border-b border-gray-600 py-2 mt-4 font-semibold">
             ${tanggalFormat}
@@ -636,15 +636,16 @@ function formatInputRupiah(input) {
         </div>`;
     });
 
-    // Total untuk hari terakhir di bawah
+    // tampilkan total untuk hari terakhir
     if (tanggalSebelumnya && totalHariIni > 0) {
       list.innerHTML += `
-        <div class="text-right mt-2 mb-4 font-bold text-yellow-400">
+        <div class="text-right mt-1 mb-3 font-bold text-yellow-300">
           Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}
         </div>`;
     }
   });
 }
+
 
 
   function hapusRekapFirebase(key) {
