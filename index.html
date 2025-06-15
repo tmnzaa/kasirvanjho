@@ -185,10 +185,6 @@
   <div id="listPengeluaran" class="space-y-2"></div>
 </div>
 
-
-
-
-
   <!-- Floating QR Support Icon -->
   <div id="toggleButton" class="floating-icon" data-bs-toggle="modal" data-bs-target="#supportModal" title="Support Me">
     <i class="bi bi-code-slash fs-5 text-dark"></i>
@@ -253,6 +249,41 @@
 
 
   <script>
+
+    function kirimWA(tanggalFormat) {
+  const allRekap = document.querySelectorAll("#rekapList .bg-gray-800");
+  let pesan = `*Rekap Tanggal ${tanggalFormat}:*\n\n`;
+  let totalSemua = 0;
+  let dataDitemukan = false;
+
+  allRekap.forEach(el => {
+    const waktu = el.querySelector("p.text-sm.text-gray-400")?.innerText || "";
+    if (!waktu.includes(tanggalFormat)) return;
+
+    const detail = el.querySelector(".text-sm.mt-1")?.innerText || "";
+    const totalText = el.querySelector(".mt-1.font-bold")?.innerText || "";
+
+    // Ekstrak angka dari total (misal: "Total: Rp 12.000" → 12000)
+    const totalAngka = parseInt(totalText.replace(/[^\d]/g, '')) || 0;
+    totalSemua += totalAngka;
+
+    pesan += `🕒 ${waktu}\n${detail}\n${totalText}\n\n`;
+    dataDitemukan = true;
+  });
+
+  if (!dataDitemukan) {
+    showNotif("Tidak ada data tanggal itu.");
+    return;
+  }
+
+  // Tambahkan total semua di akhir pesan
+  pesan += `🧾 *Total Semua:* Rp ${totalSemua.toLocaleString("id-ID")}`;
+
+  const link = `https://wa.me/6287840376082?text=${encodeURIComponent(pesan)}`;
+  window.open(link, "_blank");
+}
+
+
 
 function tampilkanTanggalHariIni() {
   const inputTanggal = document.getElementById("tanggalFilter");
@@ -603,9 +634,10 @@ function renderRekap() {
       if (tanggalFormat !== tanggalSebelumnya) {
         if (tanggalSebelumnya && totalHariIni > 0) {
           list.innerHTML += `
-            <div class="text-right mt-2 mb-4 font-bold text-yellow-400">
-              Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}
-            </div>`;
+  <div class="flex justify-between items-center mt-2 mb-4">
+    <div class="font-bold text-yellow-400">Total ${tanggalSebelumnya}: ${formatRupiah(totalHariIni)}</div>
+    <a href="#" onclick="kirimWA('${tanggalSebelumnya}')" class="text-green-400 text-sm underline">Kirim Rekap</a>
+  </div>`;
         }
 
         list.innerHTML += `
@@ -650,9 +682,6 @@ function renderRekap() {
       </div>`;
   });
 }
-
-
-
 
 
   function hapusRekapFirebase(key) {
